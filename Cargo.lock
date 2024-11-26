@@ -74,6 +74,7 @@ name = "le2go"
 version = "0.1.0"
 dependencies = [
  "opencv",
+ "rppal",
 ]
 
 [[package]]
@@ -196,6 +197,15 @@ name = "regex-syntax"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
+
+[[package]]
+name = "rppal"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b37e992f3222e304708025de77c9e395068a347449d0d7164f52d3beccdbd8d"
+dependencies = [
+ "libc",
+]
 
 [[package]]
 name = "semver"

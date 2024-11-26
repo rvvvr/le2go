@@ -4,11 +4,13 @@ use opencv::{core::{in_range, Point, Vector}, imgproc::{bounding_rect, contour_a
 
 const SIZE_THRESHOLD: i32 = 300;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
 enum Colour {
     Red,
     Blue,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
 enum Size {
     TwoBy2,
     TwoBy4,
@@ -51,7 +53,7 @@ fn main() {
 	    continue;
 	}
 
-	let size = if rightmost_rect > SIZE_THRESHOLD {
+	let size = if rightmost_rect.width > SIZE_THRESHOLD {
 	    Size::TwoBy2
 	} else {
 	    Size::TwoBy4
