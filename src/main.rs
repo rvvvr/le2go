@@ -1,6 +1,6 @@
 use std::{thread, time::Duration};
 
-use opencv::{core::{in_range, Point, Vector}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, RETR_EXTERNAL}, prelude::*, videoio::{VideoCapture, CAP_ANY}};
+use opencv::{core::{in_range, Point, VecN, Vector}, highgui::{imshow, named_window, WINDOW_AUTOSIZE}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, LINE_8, RETR_EXTERNAL}, prelude::*, videoio::{VideoCapture, CAP_ANY}};
 
 const SIZE_THRESHOLD: i32 = 300;
 
@@ -20,6 +20,7 @@ fn main() {
     let mut capture = VideoCapture::new(0, CAP_ANY).expect("could not get capture!");
     let mut frame_in = Mat::default();
     let mut frame_hsv = Mat::default();
+    named_window("shmeep", WINDOW_AUTOSIZE).expect("could not create preview window!");
 
     loop {
 	capture.read(&mut frame_in).expect("Video frame capture failed!");
@@ -48,6 +49,10 @@ fn main() {
 	    (rightmost_red_contour, red_rect, Colour::Red)
 	};
 
+	rectangle(&mut frame_in, rightmost_rect, VecN::from_array([0., 255., 0., 255.]), 1, LINE_8, 0).expect("could not draw preview rectangle!");
+
+	imshow("shmeep", &frame_in).expect("could not preview image!");
+	
 	if rightmost_rect.x < (540 - (rightmost_rect.width / 2)) {
 	    //not at assumed dropoff point yet, we shall wait.
 	    continue;
