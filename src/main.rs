@@ -49,13 +49,15 @@ fn main() {
 	    (rightmost_red_contour, red_rect, Colour::Red)
 	};
 
-	rectangle(&mut frame_in, rightmost_rect, VecN::from_array([0., 255., 0., 255.]), 1, LINE_8, 0).expect("could not draw preview rectangle!");
-
-	imshow("shmeep", &frame_in).expect("could not preview image!");
-	
 	if rightmost_rect.x < (540 - (rightmost_rect.width / 2)) {
 	    //not at assumed dropoff point yet, we shall wait.
+	    rectangle(&mut frame_in, rightmost_rect, VecN::from_array([255., 0., 0., 255.]), 1, LINE_8, 0).expect("could not draw preview rectangle!");
+	    imshow("shmeep", &frame_in).expect("could not preview image!");
+
 	    continue;
+	} else {
+	    	    rectangle(&mut frame_in, rightmost_rect, VecN::from_array([0., 255., 0., 255.]), 1, LINE_8, 0).expect("could not draw preview rectangle!");
+	    imshow("shmeep", &frame_in).expect("could not preview image!");
 	}
 
 	let size = if rightmost_rect.width > SIZE_THRESHOLD {
