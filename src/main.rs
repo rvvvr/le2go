@@ -31,7 +31,7 @@ fn main() {
 	println!("{:?}: {:#08x}", format, format.fourcc());
     }
     
-    config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(u32::from_le_bytes([b'R', b'G', b'B', b'3']), 0));
+    config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(0x34324752, 0));
 
     match config.validate() {
         CameraConfigurationStatus::Valid => println!("Camera configuration valid!"),
