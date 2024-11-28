@@ -25,6 +25,11 @@ fn main() {
     let mut capture = camera.acquire().expect("Could not activate camera!");
     let mut config = capture.generate_configuration(&[StreamRole::VideoRecording]).expect("Could not generate camera configs!");
 
+    let formats = config.get(0).unwrap().formats().pixel_formats();
+    for i in (0..formats.len()) {
+	println!("{:?}", formats.get(i);
+    }
+    
     config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(u32::from_le_bytes([b'R', b'G', b'B', b'3']), 0));
 
     capture.configure(&mut config).expect("Could not configure camera!");
