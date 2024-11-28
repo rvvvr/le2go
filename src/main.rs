@@ -91,7 +91,7 @@ fn main() {
 	println!("n planes: {}", planes.len());
 	let mut frame = planes.pop().unwrap().to_vec();
 	
-	let mut frame_in = Mat::new_rows_cols_with_bytes_mut::<VecN<u8, 3>>(1080, 1920, &mut frame).unwrap();
+	let mut frame_in = Mat::new_rows_cols_with_bytes_mut::<VecN<u8, 3>>(480, 640, &mut frame).unwrap();
 
 	assert!(imwrite("test.jpg", &frame_in, &Vector::new()).unwrap());
 
