@@ -31,7 +31,9 @@ fn main() {
 	println!("{:?}: {:#08x}", format, format.fourcc());
     }
     
-    config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(0x34324742, 0));
+    let mut cfg = config.get_mut(0).unwrap();
+    cfg.set_pixel_format(PixelFormat::new(0x34324742, 0));
+    cfg.set_size(libcamera::geometry::Size { width: 640, height: 480 });
 
     match config.validate() {
         CameraConfigurationStatus::Valid => println!("Camera configuration valid!"),
