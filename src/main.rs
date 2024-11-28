@@ -85,11 +85,11 @@ fn main() {
 	
 	let framebuffer: &MemoryMappedFrameBuffer<FrameBuffer> = req.buffer(&stream).expect("Could not get framebuffer from request!");
 
-	let planes = framebuffer.data();
+	let mut planes = framebuffer.data();
 	println!("n planes: {}", planes.len());
-	let frame = planes.get(0).unwrap();
+	let mut frame = planes.pop().unwrap().to_vec();
 	
-	let mut frame_in = Mat::from_bytes::<VecN<u8, 3>>(frame).unwrap();
+	let mut frame_in = Mat::from_bytes_mut::<VecN<u8, 3>>(&mut frame).unwrap();
 
 	cvt_color(&mut frame_in, &mut frame_hsv, COLOR_BGR2HSV, 0).expect("Could not convert image to HSV space!");
 
