@@ -1,7 +1,8 @@
-use std::{sync::mpsc, thread, time::Duration};
+use std::{process::exit, sync::mpsc, thread, time::Duration};
 
 use libcamera::{camera::CameraConfigurationStatus, camera_manager::CameraManager, framebuffer_allocator::{FrameBuffer, FrameBufferAllocator}, framebuffer_map::MemoryMappedFrameBuffer, pixel_format::PixelFormat, request::{Request, ReuseFlag}, stream::StreamRole};
 use opencv::{boxed_ref::BoxedRef, core::{in_range, merge, Point, VecN, Vector}, highgui::{imshow, named_window, wait_key, WINDOW_AUTOSIZE}, imgcodecs::{imdecode_to, imwrite, IMREAD_COLOR, IMREAD_GRAYSCALE}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, LINE_8, RETR_EXTERNAL}, prelude::*};
+use rppal::pwm::Pwm;
 
 const SIZE_THRESHOLD: i32 = 300;
 
@@ -18,6 +19,7 @@ enum Size {
 }
 
 fn main() {
+    sort(Colour::Blue, Size::TwoBy2);
     named_window("shmeep", WINDOW_AUTOSIZE).expect("Could not create window!");
     let camera_manager = CameraManager::new().expect("Could not create camera manager!");
     let cameras = camera_manager.cameras();
@@ -156,7 +158,11 @@ fn main() {
 }
 
 fn sort(colour: Colour, size: Size) {
-    //stub. this will have to activate the right gpio pin to control the servo.
+    let pwm = Pwm::with_period(rppal::pwm::Channel::Pwm0, Duration::from_millis(20), Duration::from_micros(2100), rppal::pwm::Polarity::Normal, true).unwrap();
+    thread::sleep(Duration::from_millis(500));
+    pwm.set_pulse_width(Duration::from_micros(900)).unwrap();
+    thread::sleep(Duration::from_millis(500));
+    exit(0);
 }
 
 fn wait_for_block_drop() {
