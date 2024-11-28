@@ -93,7 +93,8 @@ fn main() {
 	channels.push(red_in);
 
 	merge(&channels, &mut frame_in).unwrap();
- 
+	drop(channels);
+
 	cvt_color(&mut frame_in, &mut frame_hsv, COLOR_BGR2HSV, 0).expect("Could not convert image to HSV space!");
 
 	in_range(&frame_hsv, &[90, 100, 100], &[140, 255, 255], &mut mask_blue).expect("Could not create blue mask!");
