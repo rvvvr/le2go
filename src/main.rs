@@ -30,7 +30,13 @@ fn main() {
 	println!("{:?}", formats.get(i));
     }
     
-    config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(u32::from_le_bytes([b'R', b'G', b'B', b'3']), 0));
+    config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(u32::from_le_bytes([b'B', b'G', b'R', b'3']), 0));
+
+    match config.validate() {
+        CameraConfigurationStatus::Valid => println!("Camera configuration valid!"),
+        CameraConfigurationStatus::Adjusted => println!("Camera configuration was adjusted: {:#?}", config),
+        CameraConfigurationStatus::Invalid => panic!("Error validating camera configuration"),
+    }
 
     capture.configure(&mut config).expect("Could not configure camera!");
     
