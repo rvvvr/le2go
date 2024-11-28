@@ -1,7 +1,7 @@
 use std::{sync::mpsc, thread, time::Duration};
 
 use libcamera::{camera_manager::CameraManager, framebuffer_allocator::{FrameBuffer, FrameBufferAllocator}, framebuffer_map::MemoryMappedFrameBuffer, pixel_format::PixelFormat, request::{Request, ReuseFlag}, stream::StreamRole};
-use opencv::{core::{in_range, merge, Point, VecN, Vector}, highgui::{imshow, named_window, wait_key, WINDOW_AUTOSIZE}, imgcodecs::{imdecode_to, IMREAD_COLOR, IMREAD_GRAYSCALE}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, LINE_8, RETR_EXTERNAL}, prelude::*};
+use opencv::{boxed_ref::BoxedRef, core::{in_range, merge, Point, VecN, Vector}, highgui::{imshow, named_window, wait_key, WINDOW_AUTOSIZE}, imgcodecs::{imdecode_to, IMREAD_COLOR, IMREAD_GRAYSCALE}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, LINE_8, RETR_EXTERNAL}, prelude::*};
 
 const SIZE_THRESHOLD: i32 = 300;
 
@@ -62,9 +62,6 @@ fn main() {
 	capture.queue_request(req).unwrap();
     }
 
-    let mut red_in = Mat::default();
-    let mut green_in = Mat::default();
-    let mut blue_in = Mat::default();
     let mut frame_in = Mat::default();
     let mut frame_hsv = Mat::default();
     let mut mask_blue = Mat::default();
@@ -81,13 +78,14 @@ fn main() {
 	let green = planes.get(1).unwrap();
 	let blue = planes.get(2).unwrap();
 	
-	imdecode_to(red, IMREAD_GRAYSCALE, &mut red_in).unwrap();
-	imdecode_to(green, IMREAD_GRAYSCALE, &mut green_in).unwrap();
-	imdecode_to(blue, IMREAD_GRAYSCALE, &mut blue_in).unwrap();
-	let mut channels: Vector<Mat> = Vector::with_capacity(3);
-	channels.push(blue_in.clone());
-	channels.push(green_in.clone());
-	channels.push(red_in.clone());
+	let red_in = Mat::from_bytes::<u8>(red).unwrap();
+	let green_in = Mat::from_bytes::<u8>(green).unwrap();
+	let blue_in = Mat::from_bytes::<u8>(blue).unwrap();
+	
+	let mut channels: Vector<BoxedRef<'_, Mat>> = Vector::with_capacity(3);
+	channels.push(blue_in);
+	channels.push(green_in);
+	channels.push(red_in);
 
 	merge(&channels, &mut frame_in).unwrap();
  
