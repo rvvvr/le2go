@@ -1,6 +1,8 @@
-use std::{thread, time::Duration};
+use std::{borrow::{Borrow, BorrowMut}, rc::Rc, sync::{mpsc, Arc, Mutex}, thread, time::Duration};
 
-use opencv::{core::{in_range, Point, VecN, Vector}, highgui::{imshow, named_window, WINDOW_AUTOSIZE}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, LINE_8, RETR_EXTERNAL}, prelude::*, videoio::{VideoCapture, CAP_ANY}};
+use drm_fourcc::{DrmFormat, DrmFourcc, DrmModifier};
+use libcamera::{camera_manager::CameraManager, framebuffer::AsFrameBuffer, framebuffer_allocator::{FrameBuffer, FrameBufferAllocator}, framebuffer_map::MemoryMappedFrameBuffer, pixel_format::PixelFormat, request::{Request, ReuseFlag}, stream::StreamRole};
+use opencv::{boxed_ref::BoxedRef, core::{in_range, merge, split, Point, ToInputArray, VecN, Vector}, gapi::merge3, highgui::{destroy_window, imshow, named_window, wait_key, WINDOW_AUTOSIZE}, imgcodecs::{imdecode, imdecode_to, IMREAD_COLOR, IMREAD_GRAYSCALE}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, COLOR_HSV2BGR, LINE_8, RETR_EXTERNAL}, prelude::*, videoio::{VideoCapture, CAP_ANY}};
 
 const SIZE_THRESHOLD: i32 = 300;
 
@@ -17,13 +19,62 @@ enum Size {
 }
 
 fn main() {
-    let mut capture = VideoCapture::new(0, CAP_ANY).expect("could not get capture!");
+    named_window("shmeep", WINDOW_AUTOSIZE).expect("Could not create window!");
+    let camera_manager = CameraManager::new().expect("Could not create camera manager!");
+    let cameras = camera_manager.cameras();
+    let camera = cameras.get(0).expect("Could not get camera!");
+    let mut capture = camera.acquire().expect("Could not activate camera!");
+    let mut config = capture.generate_configuration(&[StreamRole::VideoRecording]).expect("Could not generate camera configs!");
+
+    capture.configure(&mut config).expect("Could not configure camera!");
+    
+    let mut alloc = FrameBufferAllocator::new(&camera);
+
+    let cfg = config.get(0).unwrap();
+    let stream = cfg.stream().unwrap();
+    let buffers = alloc.alloc(&stream).unwrap();
+    println!("Allocated {} buffers", buffers.len());
+
+    let buffers = buffers
+        .into_iter()
+        .map(|buf| MemoryMappedFrameBuffer::new(buf).unwrap())
+        .collect::<Vec<_>>();
+
+    let reqs = buffers
+        .into_iter()
+        .enumerate()
+        .map(|(i, buf)| {
+	    let mut req = capture.create_request(Some(i as u64)).unwrap();
+	    req.add_buffer(&stream, buf).unwrap();
+	    req
+	})
+        .collect::<Vec<_>>();
+    
+    let (tx, rx) = mpsc::channel();
+    capture.on_request_completed(move |mut request: Request| {
+	tx.send(request).unwrap();
+    });
+
+    capture.start(None).unwrap();
+
+    for req in reqs {
+	capture.queue_request(req).unwrap();
+    }
+
     let mut frame_in = Mat::default();
     let mut frame_hsv = Mat::default();
-    named_window("shmeep", WINDOW_AUTOSIZE).expect("could not create preview window!");
 
-    loop {
-	capture.read(&mut frame_in).expect("Video frame capture failed!");
+    let mut count = 0;
+    while count < 300 {
+	let mut req = rx.recv_timeout(Duration::from_secs(2)).expect("Camera request failed!");
+	
+	let framebuffer: &MemoryMappedFrameBuffer<FrameBuffer> = req.buffer(&stream).expect("Could not get framebuffer from request!");
+
+	let planes = framebuffer.data();
+	let frame = planes.get(0).unwrap();
+
+	imdecode_to(frame, IMREAD_COLOR, &mut frame_in).unwrap();
+ 
 	cvt_color(&mut frame_in, &mut frame_hsv, COLOR_BGR2HSV, 0).expect("Could not convert image to HSV space!");
 	
 	let mut mask_blue = Mat::default();
@@ -38,8 +89,8 @@ fn main() {
 	find_contours(&mask_blue, &mut blue_contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point::new(0, 0)).expect("Could not find blue contours!");
 	find_contours(&mask_red, &mut red_contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point::new(0, 0)).expect("Could not find red contours!");
 
-	let mut rightmost_red_contour: Vector<Point> = find_rightmost_contour(&red_contours, 200);
-	let mut rightmost_blue_contour: Vector<Point> = find_rightmost_contour(&blue_contours, 200);
+	let mut rightmost_red_contour: Vector<Point> = find_rightmost_contour(&red_contours, 5000);
+	let mut rightmost_blue_contour: Vector<Point> = find_rightmost_contour(&blue_contours, 5000);
 	let blue_rect = bounding_rect(&rightmost_blue_contour).expect("could not create a bounding box for blue contour!");
 	let red_rect = bounding_rect(&rightmost_red_contour).expect("could not create a bounding box for red contour!");
 
@@ -53,11 +104,16 @@ fn main() {
 	    //not at assumed dropoff point yet, we shall wait.
 	    rectangle(&mut frame_in, rightmost_rect, VecN::from_array([255., 0., 0., 255.]), 1, LINE_8, 0).expect("could not draw preview rectangle!");
 	    imshow("shmeep", &frame_in).expect("could not preview image!");
+	    wait_key(20).unwrap();
+	    req.reuse(ReuseFlag::REUSE_BUFFERS);
+	    capture.queue_request(req).expect("Could not requeue request!");
+	    count += 1;
 
 	    continue;
 	} else {
 	    	    rectangle(&mut frame_in, rightmost_rect, VecN::from_array([0., 255., 0., 255.]), 1, LINE_8, 0).expect("could not draw preview rectangle!");
-	    imshow("shmeep", &frame_in).expect("could not preview image!");
+	    imshow("shmeep", &mask_red).expect("could not preview image!");
+	    wait_key(20).unwrap();
 	}
 
 	let size = if rightmost_rect.width > SIZE_THRESHOLD {
@@ -66,9 +122,15 @@ fn main() {
 	    Size::TwoBy4
 	};
 
-	sort(colour, size);
+/*	sort(colour, size);
 	wait_for_block_drop();
-	unsort(colour, size);
+	unsort(colour, size);*/
+
+	req.reuse(ReuseFlag::REUSE_BUFFERS);
+	capture.queue_request(req).expect("Could not requeue request!");
+	count += 1;
+
+    
     }
 }
 
