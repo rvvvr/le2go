@@ -31,7 +31,7 @@ fn main() {
 	println!("{:?}: {:#08x}", format, format.fourcc());
     }
     
-    config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(0x34324752, 0));
+    config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(0x34324742, 0));
 
     match config.validate() {
         CameraConfigurationStatus::Valid => println!("Camera configuration valid!"),
@@ -87,21 +87,9 @@ fn main() {
 
 	let planes = framebuffer.data();
 	println!("n planes: {}", planes.len());
-	let red = planes.get(0).unwrap();
-	let green = planes.get(1).unwrap();
-	let blue = planes.get(2).unwrap();
+	let frame = planes.get(0).unwrap();
 	
-	let red_in = Mat::from_bytes::<u8>(red).unwrap();
-	let green_in = Mat::from_bytes::<u8>(green).unwrap();
-	let blue_in = Mat::from_bytes::<u8>(blue).unwrap();
-	
-	let mut channels: Vector<BoxedRef<'_, Mat>> = Vector::with_capacity(3);
-	channels.push(blue_in);
-	channels.push(green_in);
-	channels.push(red_in);
-
-	merge(&channels, &mut frame_in).unwrap();
-	drop(channels);
+	let mut frame_in = Mat::from_bytes::<VecN<u8, 3>>(frame).unwrap();
 
 	cvt_color(&mut frame_in, &mut frame_hsv, COLOR_BGR2HSV, 0).expect("Could not convert image to HSV space!");
 
