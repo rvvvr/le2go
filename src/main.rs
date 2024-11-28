@@ -30,7 +30,7 @@ fn main() {
 	println!("{:?}", formats.get(i));
     }
     
-    config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(u32::from_le_bytes([b'B', b'G', b'R', b'3']), 0));
+    config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(u32::from_le_bytes([b'R', b'G', b'B', b'3']), 0));
 
     match config.validate() {
         CameraConfigurationStatus::Valid => println!("Camera configuration valid!"),
