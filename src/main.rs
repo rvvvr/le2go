@@ -1,7 +1,7 @@
 use std::{sync::mpsc, thread, time::Duration};
 
-use libcamera::{camera_manager::CameraManager, framebuffer_allocator::{FrameBuffer, FrameBufferAllocator}, framebuffer_map::MemoryMappedFrameBuffer, request::{Request, ReuseFlag}, stream::StreamRole};
-use opencv::{core::{in_range, Point, VecN, Vector}, highgui::{imshow, named_window, wait_key, WINDOW_AUTOSIZE}, imgcodecs::{imdecode_to, IMREAD_COLOR}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, LINE_8, RETR_EXTERNAL}, prelude::*};
+use libcamera::{camera_manager::CameraManager, framebuffer_allocator::{FrameBuffer, FrameBufferAllocator}, framebuffer_map::MemoryMappedFrameBuffer, pixel_format::PixelFormat, request::{Request, ReuseFlag}, stream::StreamRole};
+use opencv::{core::{in_range, merge, Point, VecN, Vector}, highgui::{imshow, named_window, wait_key, WINDOW_AUTOSIZE}, imgcodecs::{imdecode_to, IMREAD_COLOR, IMREAD_GRAYSCALE}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, LINE_8, RETR_EXTERNAL}, prelude::*};
 
 const SIZE_THRESHOLD: i32 = 300;
 
@@ -25,11 +25,8 @@ fn main() {
     let mut capture = camera.acquire().expect("Could not activate camera!");
     let mut config = capture.generate_configuration(&[StreamRole::VideoRecording]).expect("Could not generate camera configs!");
 
-    let formats = config.get(0).unwrap().formats().pixel_formats();
-    for i in (0..formats.len()) {
-	println!("{:?}", formats.get(i).unwrap());
-    }
-    
+    config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(u32::from_le_bytes([b'R', b'G', b'B', b'3']), 0));
+
     capture.configure(&mut config).expect("Could not configure camera!");
     
     let mut alloc = FrameBufferAllocator::new(&camera);
@@ -65,11 +62,14 @@ fn main() {
 	capture.queue_request(req).unwrap();
     }
 
+    let mut red_in = Mat::default();
+    let mut green_in = Mat::default();
+    let mut blue_in = Mat::default();
     let mut frame_in = Mat::default();
     let mut frame_hsv = Mat::default();
     let mut mask_blue = Mat::default();
     let mut mask_red = Mat::default();
-
+    
     let mut count = 0;
     while count < 300 {
 	let mut req = rx.recv_timeout(Duration::from_secs(2)).expect("Camera request failed!");
@@ -77,9 +77,19 @@ fn main() {
 	let framebuffer: &MemoryMappedFrameBuffer<FrameBuffer> = req.buffer(&stream).expect("Could not get framebuffer from request!");
 
 	let planes = framebuffer.data();
-	let frame = planes.get(0).unwrap();
+	let red = planes.get(0).unwrap();
+	let green = planes.get(1).unwrap();
+	let blue = planes.get(2).unwrap();
+	
+	imdecode_to(red, IMREAD_GRAYSCALE, &mut red_in).unwrap();
+	imdecode_to(green, IMREAD_GRAYSCALE, &mut green_in).unwrap();
+	imdecode_to(blue, IMREAD_GRAYSCALE, &mut blue_in).unwrap();
+	let mut channels: Vector<Mat> = Vector::with_capacity(3);
+	channels.push(blue_in.clone());
+	channels.push(green_in.clone());
+	channels.push(red_in.clone());
 
-	imdecode_to(frame, IMREAD_COLOR, &mut frame_in).unwrap();
+	merge(&channels, &mut frame_in).unwrap();
  
 	cvt_color(&mut frame_in, &mut frame_hsv, COLOR_BGR2HSV, 0).expect("Could not convert image to HSV space!");
 
@@ -132,7 +142,6 @@ fn main() {
 	req.reuse(ReuseFlag::REUSE_BUFFERS);
 	capture.queue_request(req).expect("Could not requeue request!");
 	count += 1;
-
     
     }
 }
