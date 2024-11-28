@@ -132,7 +132,7 @@ fn main() {
 	} else {
 	    rectangle(&mut frame_in, rightmost_rect, VecN::from_array([0., 255., 0., 255.]), 1, LINE_8, 0).expect("could not draw preview rectangle!");
 	    
-	    imshow("shmeep", &mask_red).expect("could not preview image!");
+	    imshow("shmeep", &frame_in).expect("could not preview image!");
 	    
 	    let key = wait_key(20).unwrap();
 	    if key == 32 {
