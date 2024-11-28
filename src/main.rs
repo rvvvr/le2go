@@ -86,6 +86,7 @@ fn main() {
 	let framebuffer: &MemoryMappedFrameBuffer<FrameBuffer> = req.buffer(&stream).expect("Could not get framebuffer from request!");
 
 	let planes = framebuffer.data();
+	println!("n planes: {}", planes.len());
 	let red = planes.get(0).unwrap();
 	let green = planes.get(1).unwrap();
 	let blue = planes.get(2).unwrap();
