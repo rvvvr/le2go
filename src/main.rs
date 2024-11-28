@@ -32,7 +32,7 @@ fn main() {
     }
     
     let mut cfg = config.get_mut(0).unwrap();
-    cfg.set_pixel_format(PixelFormat::new(0x34324742, 0));
+    cfg.set_pixel_format(PixelFormat::new(0x34324752, 0));
     cfg.set_size(libcamera::geometry::Size { width: 640, height: 480 });
 
     match config.validate() {
@@ -81,8 +81,7 @@ fn main() {
     let mut mask_blue = Mat::default();
     let mut mask_red = Mat::default();
     
-    let mut count = 0;
-    while count < 300 {
+    loop {
 	let mut req = rx.recv_timeout(Duration::from_secs(2)).expect("Camera request failed!");
 	
 	let framebuffer: &MemoryMappedFrameBuffer<FrameBuffer> = req.buffer(&stream).expect("Could not get framebuffer from request!");
@@ -92,8 +91,6 @@ fn main() {
 	let mut frame = planes.pop().unwrap().to_vec();
 	
 	let mut frame_in = Mat::new_rows_cols_with_bytes_mut::<VecN<u8, 3>>(480, 640, &mut frame).unwrap();
-
-	assert!(imwrite("test.jpg", &frame_in, &Vector::new()).unwrap());
 
 	cvt_color(&mut frame_in, &mut frame_hsv, COLOR_BGR2HSV, 0).expect("Could not convert image to HSV space!");
 
@@ -120,17 +117,27 @@ fn main() {
 	if rightmost_rect.x < (540 - (rightmost_rect.width / 2)) {
 	    //not at assumed dropoff point yet, we shall wait.
 	    rectangle(&mut frame_in, rightmost_rect, VecN::from_array([255., 0., 0., 255.]), 1, LINE_8, 0).expect("could not draw preview rectangle!");
+	    
 	    imshow("shmeep", &frame_in).expect("could not preview image!");
-	    wait_key(20).unwrap();
+	    
+	    let key = wait_key(20).unwrap();
+	    if key == 32 {
+		break;
+	    }
+	    
 	    req.reuse(ReuseFlag::REUSE_BUFFERS);
 	    capture.queue_request(req).expect("Could not requeue request!");
-	    count += 1;
-
+	    
 	    continue;
 	} else {
-	    	    rectangle(&mut frame_in, rightmost_rect, VecN::from_array([0., 255., 0., 255.]), 1, LINE_8, 0).expect("could not draw preview rectangle!");
+	    rectangle(&mut frame_in, rightmost_rect, VecN::from_array([0., 255., 0., 255.]), 1, LINE_8, 0).expect("could not draw preview rectangle!");
+	    
 	    imshow("shmeep", &mask_red).expect("could not preview image!");
-	    wait_key(20).unwrap();
+	    
+	    let key = wait_key(20).unwrap();
+	    if key == 32 {
+		break;
+	    }
 	}
 
 	let size = if rightmost_rect.width > SIZE_THRESHOLD {
@@ -145,8 +152,6 @@ fn main() {
 
 	req.reuse(ReuseFlag::REUSE_BUFFERS);
 	capture.queue_request(req).expect("Could not requeue request!");
-	count += 1;
-    
     }
 }
 
