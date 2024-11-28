@@ -27,7 +27,7 @@ fn main() {
 
     let formats = config.get(0).unwrap().formats().pixel_formats();
     for i in (0..formats.len()) {
-	println!("{:?}", formats.get(i);
+	println!("{:?}", formats.get(i));
     }
     
     config.get_mut(0).unwrap().set_pixel_format(PixelFormat::new(u32::from_le_bytes([b'R', b'G', b'B', b'3']), 0));
