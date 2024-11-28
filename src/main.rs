@@ -1,4 +1,4 @@
-use std::{process::exit, sync::mpsc, thread, time::Duration};
+use std::{io::stdin, process::exit, sync::mpsc, thread, time::Duration};
 
 use libcamera::{camera::CameraConfigurationStatus, camera_manager::CameraManager, framebuffer_allocator::{FrameBuffer, FrameBufferAllocator}, framebuffer_map::MemoryMappedFrameBuffer, pixel_format::PixelFormat, request::{Request, ReuseFlag}, stream::StreamRole};
 use opencv::{boxed_ref::BoxedRef, core::{in_range, merge, Point, VecN, Vector}, highgui::{imshow, named_window, wait_key, WINDOW_AUTOSIZE}, imgcodecs::{imdecode_to, imwrite, IMREAD_COLOR, IMREAD_GRAYSCALE}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, LINE_8, RETR_EXTERNAL}, prelude::*};
@@ -162,6 +162,7 @@ fn sort(colour: Colour, size: Size) {
     thread::sleep(Duration::from_millis(500));
     pwm.set_pulse_width(Duration::from_micros(900)).unwrap();
     thread::sleep(Duration::from_millis(500));
+    stdin().read_line(&mut String::new()).unwrap();
     exit(0);
 }
 
