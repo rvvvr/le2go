@@ -103,8 +103,8 @@ fn main() {
 	find_contours(&mask_blue, &mut blue_contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point::new(0, 0)).expect("Could not find blue contours!");
 	find_contours(&mask_red, &mut red_contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE, Point::new(0, 0)).expect("Could not find red contours!");
 
-	let mut rightmost_red_contour: Vector<Point> = find_rightmost_contour(&red_contours, 1000);
-	let mut rightmost_blue_contour: Vector<Point> = find_rightmost_contour(&blue_contours, 1000);
+	let mut rightmost_red_contour: Vector<Point> = find_rightmost_contour(&red_contours, 5000);
+	let mut rightmost_blue_contour: Vector<Point> = find_rightmost_contour(&blue_contours, 5000);
 	let blue_rect = bounding_rect(&rightmost_blue_contour).expect("could not create a bounding box for blue contour!");
 	let red_rect = bounding_rect(&rightmost_red_contour).expect("could not create a bounding box for red contour!");
 
