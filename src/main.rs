@@ -91,7 +91,7 @@ fn main() {
 	
 	let mut frame_in = Mat::from_bytes_mut::<VecN<u8, 3>>(&mut frame).unwrap();
 
-	imwrite("test.jpg", &frame_in, &Vector::new()).unwrap();
+	assert!(imwrite("test.jpg", &frame_in, &Vector::new()).unwrap());
 
 	cvt_color(&mut frame_in, &mut frame_hsv, COLOR_BGR2HSV, 0).expect("Could not convert image to HSV space!");
 
