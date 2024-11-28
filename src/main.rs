@@ -158,10 +158,12 @@ fn main() {
 }
 
 fn sort(colour: Colour, size: Size) {
-    let pwm = Pwm::with_period(rppal::pwm::Channel::Pwm0, Duration::from_millis(20), Duration::from_micros(2100), rppal::pwm::Polarity::Normal, true).unwrap();
-    thread::sleep(Duration::from_millis(500));
+    let pwm = Pwm::new(rppal::pwm::Channel::Pwm0).unwrap();
+    pwm.set_frequency(50., 0.5,).unwrap();
+    pwm.enable().unwrap();
     pwm.set_pulse_width(Duration::from_micros(900)).unwrap();
     thread::sleep(Duration::from_millis(500));
+    pwm.set_pulse_width(Duration::from_micros(2100)).unwrap();
     stdin().read_line(&mut String::new()).unwrap();
     exit(0);
 }
