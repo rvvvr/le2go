@@ -164,6 +164,10 @@ fn sort(colour: Colour, size: Size) {
     let mut gpio = Gpio::new().unwrap();
     let mut pin = gpio.get(12).unwrap();
     let mut servo = pin.into_io(rppal::gpio::Mode::Output);
+    servo.set_pwm(Duration::from_millis(20), Duration::from_micros(900)).unwrap();
+    thread::sleep(Duration::from_millis(500));
+    servo.set_pwm(Duration::from_millis(20), Duration::from_micros(2100)).unwrap();
+    thread::sleep(Duration::from_millis(500));
     servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
     stdin().read_line(&mut String::new()).unwrap();
     exit(0);
