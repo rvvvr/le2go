@@ -22,7 +22,7 @@ enum Size {
 
 
 fn main() {
-    sort(Colour::Blue, Size::TwoBy2);
+    sort(Colour::Red, Size::TwoBy2);
     named_window("shmeep", WINDOW_AUTOSIZE).expect("Could not create window!");
     let camera_manager = CameraManager::new().expect("Could not create camera manager!");
     let cameras = camera_manager.cameras();
@@ -151,35 +151,46 @@ fn main() {
 	    Size::TwoBy4
 	};
 
-/*	sort(colour, size);
-	wait_for_block_drop();
-	unsort(colour, size);*/
-
+	sort(colour, size);
+	
 	req.reuse(ReuseFlag::REUSE_BUFFERS);
 	capture.queue_request(req).expect("Could not requeue request!");
     }
 }
 
 fn sort(colour: Colour, size: Size) {
-    let mut gpio = Gpio::new().unwrap();
-    let mut pin = gpio.get(12).unwrap();
-    let mut servo = pin.into_io(rppal::gpio::Mode::Output);
-    servo.set_pwm(Duration::from_millis(20), Duration::from_micros(900)).unwrap();
-    thread::sleep(Duration::from_millis(500));
-    servo.set_pwm(Duration::from_millis(20), Duration::from_micros(2100)).unwrap();
-    thread::sleep(Duration::from_millis(500));
-    servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
-    stdin().read_line(&mut String::new()).unwrap();
-    exit(0);
-}
+    let gpio = Gpio::new().unwrap();
+    let red2_pin = gpio.get(12).unwrap();
+    let red4_pin = gpio.get(13).unwrap();
+    let blue2_pin = gpio.get(19).unwrap();
+    let blue4_pin = gpio.get(16).unwrap();
+    let mut red2_servo = red2_pin.into_io(rppal::gpio::Mode::Output);
+    let mut red4_servo = red4_pin.into_io(rppal::gpio::Mode::Output);
+    let mut blue2_servo = blue2_pin.into_io(rppal::gpio::Mode::Output);
+    let mut blue4_servo = blue4_pin.into_io(rppal::gpio::Mode::Output);
+    red2_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
+    red4_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
+    blue2_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
+    blue4_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
 
-fn wait_for_block_drop() {
-    //also a stub. this will have to wait for a signal from the photoresistor
-    thread::sleep(Duration::from_secs(2));
-}
+    let (mut active_servo, width) = match (colour, size) {
+	(Colour::Red, Size::TwoBy2) => {
+	    (red2_servo, 900)
+	},
+	(Colour::Red, Size::TwoBy4) => {
+	    (red4_servo, 900)
+	},
+	(Colour::Blue, Size::TwoBy2) => {
+	    (blue2_servo, 900)
+	},
+	(Colour::Blue, Size::TwoBy4) => {
+	    (blue4_servo, 2100)
+	},
+    };
 
-fn unsort(colour: Colour, size: Size) {
-    //one more stub. this will simply close the servo that was previously opened.
+    active_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(width)).unwrap();
+    thread::sleep(Duration::from_secs(3));
+    active_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
 }
 
 fn find_rightmost_contour(contours: &Vector<Vector<Point>>, min_area: i32) -> Vector<Point> {
