@@ -23,6 +23,7 @@ enum Size {
 
 
 fn main() {
+    reset_servos();
     named_window("shmeep", WINDOW_AUTOSIZE).expect("Could not create window!");
     let camera_manager = CameraManager::new().expect("Could not create camera manager!");
     let cameras = camera_manager.cameras();
@@ -200,6 +201,27 @@ fn sort(colour: Colour, size: Size) {
     thread::sleep(Duration::from_secs(3));
     active_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
     active_servo.clear_pwm().unwrap();
+}
+
+fn reset_servos() {
+let gpio = Gpio::new().unwrap();
+    let red2_pin = gpio.get(12).unwrap();
+    let red4_pin = gpio.get(13).unwrap();
+    let blue2_pin = gpio.get(19).unwrap();
+    let blue4_pin = gpio.get(16).unwrap();
+    let mut red2_servo = red2_pin.into_io(rppal::gpio::Mode::Output);
+    let mut red4_servo = red4_pin.into_io(rppal::gpio::Mode::Output);
+    let mut blue2_servo = blue2_pin.into_io(rppal::gpio::Mode::Output);
+    let mut blue4_servo = blue4_pin.into_io(rppal::gpio::Mode::Output);
+    red2_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
+    red4_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
+    blue2_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
+    blue4_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
+
+    red2_servo.clear_pwm().unwrap();
+    red4_servo.clear_pwm().unwrap();
+    blue2_servo.clear_pwm().unwrap();
+    blue4_servo.clear_pwm().unwrap();
 }
 
 fn find_rightmost_contour(contours: &Vector<Vector<Point>>, min_area: i32) -> Vector<Point> {
