@@ -1,3 +1,4 @@
+use core::slice;
 use std::{io::stdin, process::exit, sync::mpsc, thread, time::Duration};
 
 use libcamera::{camera::CameraConfigurationStatus, camera_manager::CameraManager, framebuffer_allocator::{FrameBuffer, FrameBufferAllocator}, framebuffer_map::MemoryMappedFrameBuffer, pixel_format::PixelFormat, request::{Request, ReuseFlag}, stream::StreamRole};
@@ -104,7 +105,7 @@ fn main() {
 	in_range(&frame_hsv, &[90, 100, 100], &[140, 255, 255], &mut mask_blue).expect("Could not create blue mask!");
 	in_range(&frame_hsv, &[0, 100, 100], &[10, 255, 255], &mut mask_red_lower).expect("Could not create red mask!");
 	in_range(&frame_hsv, &[150, 100, 100], &[180, 255, 255], &mut mask_red_upper).expect("Could not add to red mask!");
-	add(&mask_red_lower, &mask_red_upper, &mut mask_red, &[0], 0).unwrap();
+	add(&mask_red_lower, &mask_red_upper, &mut mask_red, unsafe { &slice::from_raw_parts(0 as *const u8, 0) }, 0).unwrap();
 
 	let mut blue_contours: Vector<Vector<Point>> = Vector::new();
 	let mut red_contours: Vector<Vector<Point>> = Vector::new();
