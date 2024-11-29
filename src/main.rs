@@ -103,7 +103,7 @@ fn main() {
 
 	in_range(&frame_hsv, &[90, 100, 100], &[140, 255, 255], &mut mask_blue).expect("Could not create blue mask!");
 	in_range(&frame_hsv, &[0, 100, 100], &[10, 255, 255], &mut mask_red_lower).expect("Could not create red mask!");
-	in_range(&frame_hsv, &[170, 100, 100], &[180, 100, 100], &mut mask_red_upper).expect("Could not add to red mask!");
+	in_range(&frame_hsv, &[150, 100, 100], &[180, 255, 255], &mut mask_red_upper).expect("Could not add to red mask!");
 	add(&mask_red_lower, &mask_red_upper, &mut mask_red, &[0], 0).unwrap();
 
 	let mut blue_contours: Vector<Vector<Point>> = Vector::new();
