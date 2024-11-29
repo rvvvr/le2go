@@ -178,7 +178,6 @@ fn sort(colour: Colour, size: Size) {
     red4_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
     blue2_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
     blue4_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
-
     let (mut active_servo, mut inactive_a, mut inactive_b, mut inactive_c, width) = match (colour, size) {
 	(Colour::Red, Size::TwoBy2) => {
 	    (red2_servo, red4_servo, blue2_servo, blue4_servo, 900)
@@ -195,12 +194,8 @@ fn sort(colour: Colour, size: Size) {
     };
 
     active_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(width)).unwrap();
-    inactive_a.clear_pwm().unwrap();
-    inactive_b.clear_pwm().unwrap();
-    inactive_c.clear_pwm().unwrap();
     thread::sleep(Duration::from_secs(3));
-    active_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
-    active_servo.clear_pwm().unwrap();
+    reset_servos()
 }
 
 fn reset_servos() {
@@ -217,6 +212,7 @@ let gpio = Gpio::new().unwrap();
     red4_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
     blue2_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
     blue4_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
+    thread::sleep(Duration::from_millis(500));
 
     red2_servo.clear_pwm().unwrap();
     red4_servo.clear_pwm().unwrap();
