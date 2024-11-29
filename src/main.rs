@@ -88,7 +88,7 @@ fn main() {
     let mut mask_red_lower = Mat::default();
     let mut mask_red_upper = Mat::default();
     let mut mask_red = Mat::default();
-    let mut mask_passthrough = Mat::ones(480, 640, CV_8UC1).unwrap() * 255.0f64;
+    let mut mask_passthrough = (Mat::ones(480, 640, CV_8UC1).unwrap() * 255.0f64).into_result().unwrap();
     
     loop {
 	let mut req = rx.recv_timeout(Duration::from_secs(2)).expect("Camera request failed!");
@@ -106,7 +106,7 @@ fn main() {
 	in_range(&frame_hsv, &[90, 100, 100], &[140, 255, 255], &mut mask_blue).expect("Could not create blue mask!");
 	in_range(&frame_hsv, &[0, 100, 100], &[10, 255, 255], &mut mask_red_lower).expect("Could not create red mask!");
 	in_range(&frame_hsv, &[150, 100, 100], &[180, 255, 255], &mut mask_red_upper).expect("Could not add to red mask!");
-	add(&mask_red_lower, &mask_red_upper, &mut mask_red, &mask_passthrough.into_result().unwrap(), 0).unwrap();
+	add(&mask_red_lower, &mask_red_upper, &mut mask_red, &mask_passthrough, 0).unwrap();
 
 	let mut blue_contours: Vector<Vector<Point>> = Vector::new();
 	let mut red_contours: Vector<Vector<Point>> = Vector::new();
