@@ -173,24 +173,28 @@ fn sort(colour: Colour, size: Size) {
     blue2_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
     blue4_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
 
-    let (mut active_servo, width) = match (colour, size) {
+    let (mut active_servo, mut inactive_a, mut inactive_b, mut inactive_c, width) = match (colour, size) {
 	(Colour::Red, Size::TwoBy2) => {
-	    (red2_servo, 900)
+	    (red2_servo, red4_servo, blue2_servo, blue4_servo, 900)
 	},
 	(Colour::Red, Size::TwoBy4) => {
-	    (red4_servo, 900)
+	    (red4_servo, red2_servo, blue2_servo, blue4_servo, 900)
 	},
 	(Colour::Blue, Size::TwoBy2) => {
-	    (blue2_servo, 900)
+	    (blue2_servo, red2_servo, red4_servo, blue4_servo,  900)
 	},
 	(Colour::Blue, Size::TwoBy4) => {
-	    (blue4_servo, 2100)
+	    (blue4_servo, red2_servo, red4_servo, blue2_servo,  2100)
 	},
     };
 
     active_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(width)).unwrap();
+    inactive_a.clear_pwm().unwrap();
+    inactive_b.clear_pwm().unwrap();
+    inactive_c.clear_pwm().unwrap();
     thread::sleep(Duration::from_secs(3));
     active_servo.set_pwm(Duration::from_millis(20), Duration::from_micros(1500)).unwrap();
+    active_servo.clear_pwm().unwrap();
 }
 
 fn find_rightmost_contour(contours: &Vector<Vector<Point>>, min_area: i32) -> Vector<Point> {
