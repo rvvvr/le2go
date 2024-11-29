@@ -151,7 +151,7 @@ fn main() {
 	    Size::TwoBy4
 	};
 
-	sort(colour, size);
+//	sort(colour, size);
 	
 	req.reuse(ReuseFlag::REUSE_BUFFERS);
 	capture.queue_request(req).expect("Could not requeue request!");
