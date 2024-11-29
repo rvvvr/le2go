@@ -2,7 +2,7 @@ use std::{io::stdin, process::exit, sync::mpsc, thread, time::Duration};
 
 use libcamera::{camera::CameraConfigurationStatus, camera_manager::CameraManager, framebuffer_allocator::{FrameBuffer, FrameBufferAllocator}, framebuffer_map::MemoryMappedFrameBuffer, pixel_format::PixelFormat, request::{Request, ReuseFlag}, stream::StreamRole};
 use opencv::{boxed_ref::BoxedRef, core::{in_range, merge, Point, VecN, Vector}, highgui::{imshow, named_window, wait_key, WINDOW_AUTOSIZE}, imgcodecs::{imdecode_to, imwrite, IMREAD_COLOR, IMREAD_GRAYSCALE}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, LINE_8, RETR_EXTERNAL}, prelude::*};
-use rppal::pwm::Pwm;
+use rppal::{gpio::IoPin, pwm::Pwm};
 use rust_gpiozero::Servo;
 
 const SIZE_THRESHOLD: i32 = 300;
@@ -18,6 +18,8 @@ enum Size {
     TwoBy2,
     TwoBy4,
 }
+
+
 
 fn main() {
     sort(Colour::Blue, Size::TwoBy2);
@@ -159,7 +161,7 @@ fn main() {
 }
 
 fn sort(colour: Colour, size: Size) {
-    let mut servo = Servo::new(26);
+    let mut servo = Servo::new(12);
     servo.max();
     thread::sleep(Duration::from_millis(500));
     servo.min();
