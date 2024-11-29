@@ -1,7 +1,7 @@
 use std::{io::stdin, process::exit, sync::mpsc, thread, time::Duration};
 
 use libcamera::{camera::CameraConfigurationStatus, camera_manager::CameraManager, framebuffer_allocator::{FrameBuffer, FrameBufferAllocator}, framebuffer_map::MemoryMappedFrameBuffer, pixel_format::PixelFormat, request::{Request, ReuseFlag}, stream::StreamRole};
-use opencv::{boxed_ref::BoxedRef, core::{in_range, merge, Point, VecN, Vector}, highgui::{imshow, named_window, wait_key, WINDOW_AUTOSIZE}, imgcodecs::{imdecode_to, imwrite, IMREAD_COLOR, IMREAD_GRAYSCALE}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, LINE_8, RETR_EXTERNAL}, prelude::*};
+use opencv::{boxed_ref::BoxedRef, core::{add, in_range, merge, Point, VecN, Vector}, highgui::{imshow, named_window, wait_key, WINDOW_AUTOSIZE}, imgcodecs::{imdecode_to, imwrite, IMREAD_COLOR, IMREAD_GRAYSCALE}, imgproc::{bounding_rect, contour_area, cvt_color, find_contours, rectangle, CHAIN_APPROX_SIMPLE, COLOR_BGR2HSV, LINE_8, RETR_EXTERNAL}, prelude::*};
 use rppal::{gpio::{Gpio, IoPin}, pwm::Pwm};
 use rust_gpiozero::Servo;
 
@@ -84,6 +84,8 @@ fn main() {
     let mut frame_in = Mat::default();
     let mut frame_hsv = Mat::default();
     let mut mask_blue = Mat::default();
+    let mut mask_red_lower = Mat::default();
+    let mut mask_red_upper = Mat::default();
     let mut mask_red = Mat::default();
     
     loop {
@@ -100,7 +102,9 @@ fn main() {
 	cvt_color(&mut frame_in, &mut frame_hsv, COLOR_BGR2HSV, 0).expect("Could not convert image to HSV space!");
 
 	in_range(&frame_hsv, &[90, 100, 100], &[140, 255, 255], &mut mask_blue).expect("Could not create blue mask!");
-	in_range(&frame_hsv, &[0, 100, 100], &[10, 255, 255], &mut mask_red).expect("Could not create red mask!");
+	in_range(&frame_hsv, &[0, 100, 100], &[10, 255, 255], &mut mask_red_lower).expect("Could not create red mask!");
+	in_range(&frame_hsv, &[170, 100, 100], &[180, 100, 100], &mut mask_red_upper).expect("Could not add to red mask!");
+	add(&mask_red_lower, &mask_red_upper, &mut mask_red, &[0], 0).unwrap();
 
 	let mut blue_contours: Vector<Vector<Point>> = Vector::new();
 	let mut red_contours: Vector<Vector<Point>> = Vector::new();
