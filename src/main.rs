@@ -23,7 +23,6 @@ enum Size {
 
 
 fn main() {
-    sort(Colour::Red, Size::TwoBy2);
     named_window("shmeep", WINDOW_AUTOSIZE).expect("Could not create window!");
     let camera_manager = CameraManager::new().expect("Could not create camera manager!");
     let cameras = camera_manager.cameras();
@@ -125,7 +124,7 @@ fn main() {
 	    (rightmost_red_contour, red_rect, Colour::Red)
 	};
 
-	if rightmost_rect.x < (240 - (rightmost_rect.width / 2)) {
+	if rightmost_rect.x < (240 + (rightmost_rect.width / 2)) {
 	    //not at assumed dropoff point yet, we shall wait.
 	    rectangle(&mut frame_in, rightmost_rect, VecN::from_array([255., 0., 0., 255.]), 1, LINE_8, 0).expect("could not draw preview rectangle!");
 	    
@@ -157,7 +156,7 @@ fn main() {
 	    Size::TwoBy4
 	};
 
-//	sort(colour, size);
+	sort(colour, size);
 	
 	req.reuse(ReuseFlag::REUSE_BUFFERS);
 	capture.queue_request(req).expect("Could not requeue request!");
